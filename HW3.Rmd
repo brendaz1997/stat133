@@ -9,7 +9,7 @@ output:
 ---
 <!-- Don't edit in between this line and the one below -->
 ```{r include=FALSE}
-# Don't delete this chunk if you are using the DataComputing package
+
 library(DataComputing)
 library(tidyr)
 library(ggthemes)
@@ -19,7 +19,7 @@ library(ggthemes)
 includeSourceDocuments()
 ```
 <!-- Don't edit the material above this line -->
-
+#analyzed yearly cost of attending college versus college selectivity
 ```{r}
 #had to manually download file to use
 load("~/ScorecardSmall.Rda")
