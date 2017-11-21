@@ -1,0 +1,91 @@
+---
+title: "HW 3: A Graph for the Economist"
+author: "Brenda Zhang"
+date: ""
+output: 
+  html_document:
+    fig_height: 3
+    fig_width: 5
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+library(tidyr)
+library(ggthemes)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+```{r}
+#had to manually download file to use
+load("~/ScorecardSmall.Rda")
+```
+1. Select just the variables you need.
+
+```{r}
+toolittle <- c(1,6,7,8)
+publicprivate <- c(1,2)
+
+'%!in%' <- function(x,y)!('%in%'(x,y))
+newScorecard <- ScorecardSmall %>%
+  filter(CCSIZSET %!in% toolittle, CONTROL %in% publicprivate, ADM_RATE<100) %>%
+  select(CONTROL, ADM_RATE, NPT41_PUB, NPT43_PUB, NPT45_PUB, NPT41_PRIV, NPT43_PRIV, NPT45_PRIV)
+    
+head(newScorecard)
+```
+
+2. Make data narrow.
+
+```{r}
+tidyscorecard <- newScorecard%>%
+  gather(key=long_name, value= netcost, NPT41_PUB, NPT43_PUB, NPT45_PUB, NPT41_PRIV, NPT43_PRIV, NPT45_PRIV)
+
+head(tidyscorecard)
+```
+
+3. Join tables to translate names of income groups.
+
+```{r}
+download.file("http://tiny.cc/dcf/NPT4-names.csv", destfile="~/NPT4-names.csv")
+Names <- read.csv(file = "~/NPT4-names.csv")
+
+head(Names)
+
+namedscorecard <- tidyscorecard %>%
+    left_join(Names, by = "long_name")
+
+head(namedscorecard)
+```
+4. graph data table
+
+
+```{r, fig.width= 8, fig.height=5}
+namedscorecard$ADM_RATE <- namedscorecard$ADM_RATE*100
+namedscorecard$netcost <- namedscorecard$netcost*.001
+
+namedscorecard$CONTROL <- factor(namedscorecard$CONTROL, levels = c(2, 1))
+
+CONTROL_names <- c(`2` = "private", `1` = "public")
+
+
+plot1 <- ggplot(namedscorecard, aes(x= ADM_RATE, y=netcost)) + geom_point(col = "blue", alpha = 1/4, show.legend = FALSE)+ geom_smooth(col = "red", method = loess, show.legend = FALSE)
+
+plot2 <- plot1 + facet_grid(CONTROL ~ short_name, labeller = labeller(CONTROL = as_labeller(CONTROL_names)))
+
+plot3 <- plot2 + labs(title = "Score Card", x = "Admission Rate , %", y = "Net cost per year, $'000")+
+  theme(plot.title = element_text(size = 30, colour = "black"),  
+  axis.title.x = element_text(size = 10, colour = "black"),
+  axis.title.y = element_text(size = 10, colour = "black"))
+
+plot4 <- plot3 + scale_x_continuous(limits = c(0, 100)) + scale_y_continuous(limits = c(0,50)) + theme_igray()
+
+plot4
+
+
+```
+
+
