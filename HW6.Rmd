@@ -1,0 +1,147 @@
+---
+title: "HW 6"
+author: "Brenda Zhang"
+date: ""
+output: 
+  html_document:
+    fig_height: 3
+    fig_width: 5
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+
+```{r}
+Addresses <- read.csv("http://tiny.cc/dcf/street-addresses.csv")
+Sample <- Addresses %>%
+  sample_n(size = 50)
+Sample
+```
+1-4.)
+want PO Box numbers 
+```{r}
+Match <- Sample %>%
+  filter(grepl("PO", address))
+
+Match
+
+Dont <- Sample %>%
+  filter(!grepl("PO", address))
+
+Dont
+```
+5.) 
+Some PO Box addresses still appear in the "Dont"" data frame. Should change what we are filtering by. 
+
+6.)
+```{r}
+Match <- Sample %>%
+  filter(grepl("BOX[[:blank:]]+([[:digit:]]+)", address))
+
+Match
+
+Dont <- Sample %>%
+  filter(!grepl("BOX[[:blank:]]+([[:digit:]]+)", address))
+
+Dont
+```
+
+7.)
+```{r}
+POnumber <-
+  Match %>%
+  extractMatches("BOX[[:blank:]]+([[:digit:]]+)", address, boxnum=1) %>%
+  select(boxnum)
+
+POnumber
+  
+```
+
+##Back to the Streets
+
+```{r}
+pattern <- "(ST|RD|ROAD)" #assigns the regex expression (which is a substring that will include all entries with ST, RD, or ROAD) to pattern to it can easily called later
+LeftOvers <-    #names new data frame 
+  Addresses %>% #pipes data table Adresses into next function
+  filter( ! grepl(pattern, address),
+          ! grepl(" APT|UNIT [[:digit:]]+$", address)) #filters out any entry with the previously assigned pattern (entries with ST, RD, or ROAD) and also filters out any entry with APT or UNIT and one or more numbers following at the end.
+
+head(LeftOvers) #i use head() function for the sake of the knitted html so the table isnt too long
+```
+```{r}
+Sample <- Addresses %>%
+  sample_n(size = 200) 
+
+```
+
+
+```{r}
+
+pattern <- "(ST|STREET|RD|ROAD|COURT|DR|DRIVE|AVE|TRAIL|LN|LANE|HOSPITAL|PL|PLACE|PKWY|BOX|B0X|BX|CIRCLE|CIR|CT|WAY|HALL|WOODS|TR|MANOR|TERRACE|COVE|BLVD|NCSU|HWY|NEUS|RIDGE)"  #i kept adding street endings I saw while filtering out. My regex for the endings
+
+
+LeftOvers <- Sample %>% #pipe in my sample of the addresses data frame
+  filter( ! grepl(pattern, address),
+          ! grepl(" APT|UNIT [[:digit:]]+$", address)) #filter out patterns i saw in order to find new ones. 
+
+LeftOvers #calling table with only the leftover street endings to identify more street endings
+
+
+Match<- Sample %>% # piping in my sample table of addresses
+  extractMatches(pattern, address) # extracts all the parts of each address in each row that match my regex named pattern. This is stored as a new variable (a new column) in my Match table
+
+head(Match) #call table to verify previous code worked
+
+
+Count <- transform(Match, count = table(match1)[match1]) #adds new variable that counts how many of a specific entry there are in the whole data table. This way I can see how many times a street ending pattern appeared in my sample
+
+Count <- Count %>% #pipes Count table 
+  mutate(ending = match1, count = count.Freq) %>% #I renamed previous variables of match1 and count.Freq to ending and count respectively to easier examine the table
+  select(ending, count) %>% #keep only the variables ending and count in my table
+  unique() #makes each case unique, this way there are no repeats throughout the table and we can more easily examine the data
+
+Count #call final table that shows count of each street ending
+
+
+```
+
+I filtered out the street name endings i knew existed, and kept filtering for those as well as adding endings that I saw appear. Everytime I filtered out more, I saw endings I hadn't seen before that I could filter for and examine. Then I created a new table that displays the street endings I found as well as how many there were of each type in my sample. 
+
+Below I use my method above on the whole data set Addresses the best I could. 
+
+```{r}
+pattern1 <- "(ST|STREET|RD|ROAD|COURT|DR|DRIVE|AVE|TRAIL|LN|LANE|HOSPITAL|PL|PLACE|PKWY|BOX|B0X|BX|CIRCLE|CIR|CT|WAY|HALL|WOODS|TR|MANOR|TERRACE|COVE|BLVD|NCSU|HWY|NEUS(E)|RIDGE|CENTER|SQUARE|PARKWAY|VALLEY|VILLAGE|FARM|PATH|UNIVERSITY|HOUSE|HILLS|RUN|COLLEGE|HOME|LOOP|POINT|WYND|PT|PASS)"  #i kept adding street endings I saw while filtering out. My regex for the endings
+
+
+LeftOvers1 <- Addresses %>% #pipe in whole data set Addresses
+  filter( ! grepl(pattern1, address),
+          ! grepl(" APT|UNIT [[:digit:]]+$", address)) #filter out patterns i saw in order to find new ones. 
+
+head(LeftOvers1) #calling table with only the leftover street endings to identify more street endings
+
+
+Match1<- Addresses %>% # piping in Addresses
+  extractMatches(pattern1, address) # extracts all the parts of each address in each row that match my regex named pattern. This is stored as a new variable (a new column) in my Match table
+
+head(Match1) #call table to verify previous code worked
+
+
+Count1 <- transform(Match1, count = table(match1)[match1]) #adds new variable that counts how many of a specific entry there are in the whole data table. This way I can see how many times a street ending pattern appeared in Addresses data set
+
+Count1 <- Count1 %>% #pipes Count table 
+  mutate(ending = match1, count = count.Freq) %>% #I renamed previous variables of match1 and count.Freq to ending and count respectively to easier examine the table
+  select(ending, count) %>% #keep only the variables ending and count in my table
+  unique() #makes each case unique, this way there are no repeats throughout the table and we can more easily examine the data
+
+Count1 #call final table that shows count of each street ending
+
+```
+
